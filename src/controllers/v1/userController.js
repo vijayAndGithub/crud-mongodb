@@ -18,6 +18,9 @@ const createUser = asyncHandler(async (req, res) => {
   } = req.body;
 
 
+  let userExists = await User.findOne({ email });
+  if (userExists) { return sendErrorResponse(httpStatus.NOT_FOUND, res, "User already exists with this mail") }
+
   const userData = {
     name,
     email,
@@ -47,7 +50,6 @@ const updateUser = asyncHandler(async (req, res) => {
   if (!await checkPermission('EditAccess', req.user)) return sendErrorResponse(httpStatus.NOT_FOUND, res, "Permission denied!")
 
 
-
   const { userId } = req.params;
   const { name, email, password, account_type, status,
     ViewAccess,
@@ -59,6 +61,10 @@ const updateUser = asyncHandler(async (req, res) => {
   //check if user exists
   let user = await User.findById(userId);
   if (!user) { return sendErrorResponse(httpStatus.NOT_FOUND, res, "User not found") }
+
+
+  let userExists = await User.findOne({ email, _id: { $ne: user._id } });
+  if (userExists) { return sendErrorResponse(httpStatus.NOT_FOUND, res, "Email already in use") }
 
 
   const userData = {
