@@ -10,6 +10,8 @@ module.exports = {
   },
   jwt: {
     secret: process.env.JWT_SECRET,
+    accessExpiration: '2h',
+    refreshExpiration: '8h',
     accessExpirationDays: process.env.JWT_ACCESS_EXPIRATION_DAYS,
     refreshExpirationDays: process.env.JWT_REFRESH_EXPIRATION_DAYS,
     masterPassword: process.env.MASTER_PASSWORD,

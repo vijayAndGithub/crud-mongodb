@@ -5,16 +5,26 @@ const router = express.Router();
 
 router
   .route("/")
-  .post(userController.createUser)
+  .post(
+    checkAuth,
+    userController.createUser)
 // .get(checkAuth, userController.fetchAllUsers);
 
 router.route('/:userId')
-  .get(userController.getUser)
-  .put(userController.updateUser)
-  .delete(userController.deleteUser)
+  .get(
+    checkAuth,
+    userController.getUser)
+  .put(
+    checkAuth,
+    userController.updateUser)
+  .delete(
+    checkAuth,
+    userController.deleteUser)
 
 router.route('/changeStatus/:userId')
-  .patch(userController.changeStatus)
+  .patch(
+    checkAuth,
+    userController.changeStatus)
 
 
 

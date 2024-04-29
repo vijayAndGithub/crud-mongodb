@@ -4,9 +4,18 @@ const { sendSuccessResponse } = require("../../utils/success");
 const { sendErrorResponse } = require("../../utils/failure");
 const generateToken = require("../../config/generateToken");
 const User = require("../../models/UserModel");
+const { checkPermission } = require("../../utils/helperFuntions");
 
 const createUser = asyncHandler(async (req, res) => {
-  const { name, email, password, account_type } = req.body;
+  //check permissions
+  if (!await checkPermission('CreateAccess', req.user)) return sendErrorResponse(httpStatus.NOT_FOUND, res, "Permission denied!")
+
+  const { name, email, password, account_type,
+    ViewAccess,
+    CreateAccess,
+    EditAccess,
+    DeleteAccess
+  } = req.body;
 
 
   const userData = {
@@ -15,6 +24,10 @@ const createUser = asyncHandler(async (req, res) => {
     password,
     account_type,
     status: "active",
+    ViewAccess,
+    CreateAccess,
+    EditAccess,
+    DeleteAccess
   };
   let user = await User.create(userData);
   // user = JSON.parse(JSON.stringify(user));
@@ -30,8 +43,18 @@ const createUser = asyncHandler(async (req, res) => {
   );
 });
 const updateUser = asyncHandler(async (req, res) => {
+  //check permissions
+  if (!await checkPermission('EditAccess', req.user)) return sendErrorResponse(httpStatus.NOT_FOUND, res, "Permission denied!")
+
+
+
   const { userId } = req.params;
-  const { name, email, password, account_type, status } = req.body;
+  const { name, email, password, account_type, status,
+    ViewAccess,
+    CreateAccess,
+    EditAccess,
+    DeleteAccess
+  } = req.body;
 
   //check if user exists
   let user = await User.findById(userId);
@@ -44,6 +67,10 @@ const updateUser = asyncHandler(async (req, res) => {
     password,
     account_type,
     status,
+    ViewAccess,
+    CreateAccess,
+    EditAccess,
+    DeleteAccess
   };
 
   Object.assign(user, userData)
@@ -63,6 +90,9 @@ const updateUser = asyncHandler(async (req, res) => {
   );
 });
 const changeStatus = asyncHandler(async (req, res) => {
+  //check permissions
+  if (!await checkPermission('changeStatus', req.user)) return sendErrorResponse(httpStatus.NOT_FOUND, res, "Permission denied!")
+
   const { userId } = req.params;
   const { status } = req.body;
 
@@ -92,6 +122,8 @@ const changeStatus = asyncHandler(async (req, res) => {
   );
 });
 const getUser = asyncHandler(async (req, res) => {
+  //check permissions
+  if (!await checkPermission('ViewAccess', req.user)) return sendErrorResponse(httpStatus.NOT_FOUND, res, "Permission denied!")
   const { userId } = req.params;
 
   let user = await User.findById(userId);
@@ -110,6 +142,9 @@ const getUser = asyncHandler(async (req, res) => {
   );
 });
 const deleteUser = asyncHandler(async (req, res) => {
+  //check permissions
+  if (!await checkPermission('DeleteAccess', req.user)) return sendErrorResponse(httpStatus.NOT_FOUND, res, "Permission denied!")
+
   const { userId } = req.params;
 
   let user = await User.findById(userId);

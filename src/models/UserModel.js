@@ -9,6 +9,11 @@ const UserSchema = new mongoose.Schema(
     password: { type: String, trim: true, required: true },
     account_type: { type: String, enum: [ 'admin', 'user' ], required: true },
     status: { type: String, enum: [ 'active', 'inactive' ], required: true },
+    ViewAccess: { type: Boolean, required: true },
+    CreateAccess: { type: Boolean, required: true },
+    EditAccess: { type: Boolean, required: true },
+    DeleteAccess: { type: Boolean, required: true },
+
   },
   {
     timestamps: true,

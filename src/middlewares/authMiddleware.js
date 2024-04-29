@@ -14,13 +14,16 @@ const checkAuth = asyncHandler(async (req, res, next) => {
     req.headers.authorization.startsWith("Bearer ")
   ) {
     try {
-      token = req.headers.authorization.split(" ")[1];
+      token = req.headers.authorization.split(" ")[ 1 ];
 
       //decode token
       const decoded = jwt.verify(token, config.jwt.secret);
 
-      req.user = await User.findById(decoded.id).select("-password");
-
+      const userData = await User.findById(decoded.id).select("-password");
+      if (userData.status === 'inactive') {
+        return sendErrorResponse(httpStatus.UNAUTHORIZED, res, "User is not active!")
+      }
+      req.user = userData
       next();
     } catch (error) {
       console.error(error);

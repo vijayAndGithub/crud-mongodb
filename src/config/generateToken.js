@@ -7,4 +7,20 @@ const generateToken = (id) => {
   });
 };
 
-module.exports = generateToken;
+const generateJwtTokens = async (JwtData) => {
+  try {
+
+    const accessToken = jwt.sign(JwtData, config.jwt.secret, { expiresIn: config.jwt.accessExpiration });
+    const refreshToken = jwt.sign(JwtData, config.jwt.secret, { expiresIn: config.jwt.refreshExpiration });
+
+
+    return {
+      accessToken,
+      refreshToken
+    }
+
+  } catch (error) {
+    console.log('error generating token', error)
+  }
+}
+module.exports = { generateToken, generateJwtTokens };

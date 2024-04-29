@@ -2,133 +2,47 @@ const asyncHandler = require("express-async-handler");
 const httpStatus = require("http-status");
 const { sendSuccessResponse } = require("../../utils/success");
 const { sendErrorResponse } = require("../../utils/failure");
-const generateToken = require("../../config/generateToken");
+const { generateToken, generateJwtTokens } = require("../../config/generateToken");
 const User = require("../../models/UserModel");
 
-const createUser = asyncHandler(async (req, res) => {
-  const { name, email, password, account_type } = req.body;
 
 
-  const userData = {
-    name,
-    email,
-    password,
-    account_type,
-    status: "active",
+const login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  let user = await User.findOne({ email });
+  if (!user)
+    return sendErrorResponse(httpStatus.NOT_FOUND, res, "User not found");
+  if (!(await user.matchPassword(password))) {
+    return sendErrorResponse(
+      httpStatus.UNAUTHORIZED,
+      res,
+      "Incorrect email or password!"
+    );
+  }
+  if (user.status === 'inactive') {
+    return sendErrorResponse(httpStatus.UNAUTHORIZED, res, "User is not active!")
+  }
+  //jwt flow
+  const jwtClaim = {
+    id: user._id
+  }
+  const { accessToken, refreshToken } = await generateJwtTokens(jwtClaim)
+
+  user = JSON.parse(JSON.stringify(user));
+  const response = {
+    ...user,
+    accessToken,
+    refreshToken,
   };
-  let user = await User.create(userData);
-  // user = JSON.parse(JSON.stringify(user));
-  // const response = {
-  //   ...user,
-  //   token: generateToken(user._id),
-  // };
   sendSuccessResponse(
     httpStatus.CREATED,
     res,
-    "User registered successfully!",
-    user
+    "User login successful!",
+    response
   );
 });
-const updateUser = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
-  const { name, email, password, account_type, status } = req.body;
-
-  //check if user exists
-  let user = await User.findById(userId);
-  if (!user) { return sendErrorResponse(httpStatus.NOT_FOUND, res, "User not found") }
 
 
-  const userData = {
-    name,
-    email,
-    password,
-    account_type,
-    status,
-  };
-
-  Object.assign(user, userData)
-
-  await user.save()
-  // let user = await User.create(userData);
-  // user = JSON.parse(JSON.stringify(user));
-  // const response = {
-  //   ...user,
-  //   token: generateToken(user._id),
-  // };
-  sendSuccessResponse(
-    httpStatus.OK,
-    res,
-    "User updated successfully!",
-    user
-  );
-});
-const changeStatus = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
-  const { status } = req.body;
-
-  //check if user exists
-  let user = await User.findById(userId);
-  if (!user) { return sendErrorResponse(httpStatus.NOT_FOUND, res, "User not found") }
-
-
-  const userData = {
-    status,
-  };
-
-  Object.assign(user, userData)
-
-  await user.save()
-  // let user = await User.create(userData);
-  // user = JSON.parse(JSON.stringify(user));
-  // const response = {
-  //   ...user,
-  //   token: generateToken(user._id),
-  // };
-  sendSuccessResponse(
-    httpStatus.OK,
-    res,
-    "User updated successfully!",
-    user
-  );
-});
-const getUser = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
-
-  let user = await User.findById(userId);
-  if (!user) { return sendErrorResponse(httpStatus.NOT_FOUND, res, "User not found") }
-
-  // user = JSON.parse(JSON.stringify(user));
-  // const response = {
-  //   ...user,
-  //   token: generateToken(user._id),
-  // };
-  sendSuccessResponse(
-    httpStatus.CREATED,
-    res,
-    "User fetched successfully!",
-    user
-  );
-});
-const deleteUser = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
-
-  let user = await User.findById(userId);
-  if (!user) { return sendErrorResponse(httpStatus.NOT_FOUND, res, "User not found") }
-
-
-  await User.findByIdAndDelete(userId)
-  // user = JSON.parse(JSON.stringify(user));
-  // const response = {
-  //   ...user,
-  //   token: generateToken(user._id),
-  // };
-  sendSuccessResponse(
-    httpStatus.OK,
-    res,
-    "User deleted successfully!",
-    user
-  );
-});
 
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, pic } = req.body;
@@ -164,32 +78,6 @@ const registerUser = asyncHandler(async (req, res) => {
   );
 });
 
-const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  let user = await User.findOne({ email });
-  if (!user)
-    return sendErrorResponse(httpStatus.NOT_FOUND, res, "User not found");
-  if (!(await user.matchPassword(password))) {
-    return sendErrorResponse(
-      httpStatus.UNAUTHORIZED,
-      res,
-      "Incorrect email or password!"
-    );
-  }
-
-  user = JSON.parse(JSON.stringify(user));
-  const response = {
-    ...user,
-    token: generateToken(user._id),
-  };
-  sendSuccessResponse(
-    httpStatus.CREATED,
-    res,
-    "User login successful!",
-    response
-  );
-});
-
 const fetchAllUsers = asyncHandler(async (req, res) => {
   const keywordFilter = req.query.search
     ? {
@@ -208,12 +96,7 @@ const fetchAllUsers = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  createUser,
-  updateUser,
-  changeStatus,
-  getUser,
-  deleteUser,
-  registerUser,
   login,
+  registerUser,
   fetchAllUsers,
 };
