@@ -8,7 +8,7 @@ const { checkPermission } = require("../../utils/helperFuntions");
 
 const createUser = asyncHandler(async (req, res) => {
   //check permissions
-  if (!await checkPermission('CreateAccess', req.user)) return sendErrorResponse(httpStatus.NOT_FOUND, res, "Permission denied!")
+  if (!await checkPermission('admin', req.user)) return sendErrorResponse(httpStatus.NOT_FOUND, res, "Permission denied!")
 
   const { name, email, password, account_type,
     ViewAccess,
